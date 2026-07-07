@@ -1,13 +1,13 @@
-"""DEFERRED — do not run yet.
+"""Deploy the product-fidelity agent to Vertex AI Agent Engine and (optionally)
+register it on Gemini Enterprise (Discovery Engine), injecting the A2UI v0.9
+extension into the agent card. Adapted from the in-workspace invoice-auditor sample.
 
-Deploys the product-fidelity agent to Vertex AI Agent Engine and registers it
-on Gemini Enterprise (Discovery Engine), injecting the A2UI v0.9 extension into
-the agent card. Adapted from the in-workspace invoice-auditor sample.
-
-Prereqs (set in .env before running later):
-  PROJECT_ID, LOCATION, STORAGE_BUCKET (gs://), GEMINI_ENTERPRISE_APP_ID,
-  AGENT_AUTHORIZATION, plus the model/bucket vars used at runtime.
-Run (later):  python deploy.py
+Prereqs (set in .env):
+  PROJECT_ID, LOCATION, STORAGE_BUCKET (gs://), plus the model/bucket vars used
+  at runtime. Set GEMINI_ENTERPRISE_APP_ID (and optional AGENT_AUTHORIZATION) to
+  also register on Gemini Enterprise; if unset, deployment stops after Agent
+  Engine so you can register on GE later.
+Run:  python deploy.py   (from the a2ui_omni/ directory)
 """
 
 import json
@@ -39,6 +39,30 @@ def _get_bearer_token():
         print(f"Error getting credentials: {e}")
         print("Run 'gcloud auth application-default login' first.")
     return None
+
+
+def _patch_agent_card_serialization():
+    """Work around an incompatibility in google-cloud-aiplatform 1.154.x.
+
+    Agent Engine's spec generator serializes the A2A agent card with protobuf's
+    `json_format.MessageToJson`, but a2a-sdk's `AgentCard` is a *pydantic* model
+    (no `.DESCRIPTOR`), so it raises `AttributeError`. The platform later rebuilds
+    the card via `AgentCard(**json.loads(<the string>))`, so it only needs a JSON
+    string. We intercept that one call: emit canonical A2A JSON for pydantic
+    models, and defer to the original for real protobuf messages.
+    """
+    from google.protobuf import json_format
+    from pydantic import BaseModel
+
+    original = json_format.MessageToJson
+    if getattr(original, "_a2ui_patched", False):
+        return
+    def patched(message, *args, **kwargs):
+        if isinstance(message, BaseModel):
+            return message.model_dump_json(by_alias=True, exclude_none=True)
+        return original(message, *args, **kwargs)
+    patched._a2ui_patched = True
+    json_format.MessageToJson = patched
 
 
 def _register_agent_on_gemini_enterprise(
@@ -83,10 +107,6 @@ def main():
 
     vertexai.init(project=project_id, location=location,
                   api_endpoint=api_endpoint, staging_bucket=storage)
-    client = vertexai.Client(
-        project=project_id, location=location,
-        http_options=types.HttpOptions(api_version="v1beta1"),
-    )
 
     skill = AgentSkill(
         id="product-fidelity-eval",
@@ -121,20 +141,25 @@ def main():
         "agent_framework": "google-adk",
         "staging_bucket": storage,
         "gcs_dir_name": "product_fidelity_a2ui",
+        # Pins MUST match the locally-installed versions: the A2aAgent is shipped
+        # as a cloudpickle, so the remote runtime has to unpickle it with the same
+        # cloudpickle/pydantic/SDK versions or it fails on load.
         "requirements": [
-            "google-cloud-aiplatform[agent_engines,adk]==1.148.0",
-            "google-genai==1.73.1",
-            "python-dotenv==1.2.2",
-            "uvicorn==0.44.0",
+            "google-cloud-aiplatform[agent_engines,adk]==1.154.0",
+            # google-genai intentionally unpinned: aiplatform[adk] resolves a
+            # consistent version (google-adk needs >=2.9); it's a runtime dep,
+            # not part of the pickled object graph, so it needn't match local.
+            "python-dotenv",
+            "uvicorn==0.34.1",
             "a2a-sdk==0.3.26",
-            "cloudpickle==3.1.2",
-            "pydantic==2.13.1",
-            "jsonschema==4.26.0",
-            "a2ui-agent-sdk==0.2.1",
-            "fastapi==0.136.0",
-            "pandas",
-            "Pillow",
-            "google-cloud-storage",
+            "cloudpickle==3.0.0",
+            "pydantic==2.12.5",
+            "jsonschema==4.23.0",
+            "a2ui-agent-sdk==0.2.4",
+            "fastapi==0.134.0",
+            "pandas==2.1.4",
+            "Pillow==10.2.0",
+            "google-cloud-storage==2.18.2",
         ],
         "http_options": {"api_version": "v1beta1"},
         "max_instances": 1,
@@ -162,10 +187,43 @@ def main():
         },
     }
 
-    remote_agent = client.agent_engines.create(agent=a2ui_agent, config=config)
-    remote_engine_resource = remote_agent.api_resource.name
+    # Deploy via the classic Agent Engine API (the pairing the preview A2aAgent
+    # template is built for). The newer genai `client.agent_engines.create` path
+    # tries to protobuf-serialize the pydantic a2a AgentCard and crashes on 1.154.
+    from vertexai import agent_engines
+
+    _patch_agent_card_serialization()  # 1.154.x pydantic-agent-card workaround
+    remote_agent = agent_engines.create(
+        agent_engine=a2ui_agent,
+        requirements=config["requirements"],
+        display_name=config["display_name"],
+        description=config["description"],
+        gcs_dir_name=config["gcs_dir_name"],
+        extra_packages=config["extra_packages"],
+        env_vars=config["env_vars"],
+        max_instances=config["max_instances"],
+    )
+    remote_engine_resource = getattr(remote_agent, "resource_name", None) or (
+        remote_agent.api_resource.name
+    )
     print(f"✓ Remote agent created: {remote_engine_resource}")
 
+    # Gemini Enterprise registration is optional: only run it when an app ID is
+    # configured. Without it, we stop after the Agent Engine deployment so you
+    # can register the agent on your GE app later (set GEMINI_ENTERPRISE_APP_ID
+    # and re-run, or register via the console using the resource name above).
+    if not app_id:
+        print(
+            "\nℹ GEMINI_ENTERPRISE_APP_ID not set — skipping Gemini Enterprise "
+            "registration.\n  Agent Engine deployment complete. To register on "
+            "GE later, set GEMINI_ENTERPRISE_APP_ID in .env and re-run, or add "
+            "this agent in the GE console.\n"
+            f"  Resource name: {remote_engine_resource}"
+        )
+        return
+
+    # Fetch the deployed agent card and inject the A2UI v0.9 extension so any
+    # consumer (including Gemini Enterprise) knows this agent renders A2UI.
     a2a_endpoint = f"https://{api_endpoint}/v1beta1/{remote_engine_resource}/a2a/v1/card"
     headers = {"Authorization": f"Bearer {_get_bearer_token()}", "Content-Type": "application/json"}
     response = httpx.get(a2a_endpoint, headers=headers)
