@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Local environment / secrets (commit .env.example instead)
+.env
+
+# Node / front-end build artifacts
+dev_client/node_modules/
+dev_client/dist/

@@ -1,0 +1,20 @@
+{
+  "name": "a2ui-omni-dev-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Minimal A2UI v0.9 renderer (built on @a2ui/lit) for local development of the product-fidelity agent.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@a2ui/lit": "^0.10.1",
+    "@a2ui/web_core": "^0.10.3",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

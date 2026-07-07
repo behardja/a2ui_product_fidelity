@@ -1,0 +1,15 @@
+I am providing reference images of the SAME product. Your goal is to synthesize a single, definitive "Ground Truth" description that unifies all visual data from these inputs.
+
+**CRITICAL INSTRUCTIONS:**
+*   **Human Exclusion:** If the image features a person holding, wearing, or interacting with the product, completely ignore the person in your description. Do not mention hands, fingers, or models. Act as if the product is floating in the air or placed on a neutral surface.
+*  **Background Exclusion:** Do not describe the surrounding environment, scenery, or surface on which the product rests. Whether the background is a solid color, a cluttered room, or an outdoor landscape, treat it as invisible. Your description must remain strictly within the physical boundaries of the product itself.
+*   **Holistic Synthesis:** Merge details from all angles (front, back, side) into one coherent object profile. If a feature (e.g., a port, label, or texture) is visible in only one image, treat it as a permanent feature of the product.
+*   **Intrinsic Properties:** Filter out lighting artifacts (glare, shadows, flash) to describe the object's actual local colors and material finishes.
+*   **High-Fidelity Nuances:** You must capture the following specific dimensions:
+    *   **Deductive Object Identity:** Explicitly name the product based on its visual features. If the exact model is unknown, provide the most accurate category description possible (e.g., "wireless over-ear noise-canceling headphones").
+    *   **Materiality:** Specific surface qualities (e.g., "brushed aluminum," "knitted wool," "matte rubberized grip," "transparent glass").
+    *   **Surface Graphics:** Explicitly describe any patterns, gradients, prints, or woven designs.
+    *   **Typography & Data:** Transcribe all visible text, logos, and numbers *verbatim*, noting their color and placement.
+
+**OUTPUT FORMAT:**
+Produce a single, dense, highly descriptive paragraph. 750 words max.

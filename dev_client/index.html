@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product Fidelity · A2UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* ---- Refined-light tokens (reference: behardja/product-fidelity-eval) ---- */
+      :root {
+        --canvas: #f6f6f8;
+        --panel: #ffffff;
+        --ink: #101622;
+        --muted: #5b6472;
+        --line: #e3e6ec;
+        --primary: #135bec;
+        --primary-hover: #0f4fd0;
+        --primary-weak: #e8f0fe;
+        --pass: #16a34a;
+        --fail: #dc2626;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+        --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
+        --shadow-1: 0 1px 2px rgba(16,22,34,.06), 0 1px 3px rgba(16,22,34,.04);
+        --shadow-2: 0 8px 24px rgba(16,22,34,.10);
+        --ring: 0 0 0 3px var(--primary-weak);
+        --t: 160ms cubic-bezier(.2,.6,.2,1);
+      }
+
+      /* ---- A2UI widget design tokens ----
+         @a2ui/lit ships NO base tokens, so the app must define the whole
+         --a2ui-* system or components render unstyled (invisible text on a
+         missing color, black/transparent card backgrounds). These cascade into
+         the widgets' shadow DOM. Values mirror the shell (light, blue primary). */
+      :root {
+        color-scheme: light;
+        --a2ui-color-primary: #135bec;
+        --a2ui-color-primary-hover: #0f4fd0;
+        --a2ui-color-on-primary: #ffffff;
+        --a2ui-color-secondary: #eef2f8;
+        --a2ui-color-secondary-hover: #e3e9f2;
+        --a2ui-color-on-secondary: #101622;
+        --a2ui-color-surface: #ffffff;
+        --a2ui-color-on-surface: #101622;
+        --a2ui-color-on-background: #101622;
+        --a2ui-color-border: #e3e6ec;
+        --a2ui-color-input: #ffffff;
+        --a2ui-color-on-input: #101622;
+
+        --a2ui-font-family-title: "Inter", system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        --a2ui-font-size-2xl: 1.5rem;
+        --a2ui-font-size-xl: 1.25rem;
+        --a2ui-font-size-l: 1.1rem;
+        --a2ui-font-size-m: 0.98rem;
+        --a2ui-font-size-s: 0.9rem;
+        --a2ui-font-size-xs: 0.8rem;
+        --a2ui-line-height-headings: 1.25;
+        --a2ui-line-height-body: 1.55;
+
+        --a2ui-spacing-xs: 4px; --a2ui-spacing-s: 8px; --a2ui-spacing-m: 14px; --a2ui-spacing-l: 20px;
+        --a2ui-border: 1px solid #e3e6ec;
+        --a2ui-border-width: 1px;
+        --a2ui-border-radius: 12px;
+
+        --a2ui-card-background: #ffffff;
+        --a2ui-card-border: 1px solid #e3e6ec;
+        --a2ui-card-border-radius: 14px;
+        --a2ui-card-padding: 14px;
+        --a2ui-card-margin: 0 0 12px 0;
+        --a2ui-card-box-shadow: 0 1px 2px rgba(16,22,34,.06), 0 1px 3px rgba(16,22,34,.05);
+
+        --a2ui-button-background: #135bec;
+        --a2ui-button-border: 1px solid #135bec;
+        --a2ui-button-border-radius: 10px;
+        --a2ui-button-padding: 9px 18px;
+        --a2ui-button-font-weight: 600;
+        --a2ui-button-box-shadow: 0 2px 8px rgba(19,91,236,.25);
+
+        --a2ui-image-border-radius: 10px;
+        --a2ui-image-small-feature-size: 92px;
+        --a2ui-image-large-feature-size: 360px;
+
+        --a2ui-text-color-text: #101622;
+        --a2ui-text-caption-color: #5b6472;
+
+        --a2ui-row-gap: 14px;
+        --a2ui-column-gap: 10px;
+        --a2ui-list-gap: 12px;
+        --a2ui-list-padding: 0;
+
+        --a2ui-tabs-header-background: transparent;
+        --a2ui-tabs-header-color: #5b6472;
+        --a2ui-tabs-header-background-active: #e8f0fe;
+        --a2ui-tabs-header-color-active: #135bec;
+        --a2ui-tabs-border: 1px solid #e3e6ec;
+        --a2ui-tabs-content-padding: 14px 2px;
+        --a2ui-textfield-border: 1px solid #e3e6ec;
+        --a2ui-textfield-border-radius: 10px;
+        --a2ui-textfield-padding: 10px 12px;
+        --a2ui-textfield-color-border-focus: #135bec;
+        --a2ui-slider-thumb-color: #135bec;
+        --a2ui-slider-track-color: #cdd6e4;
+        --a2ui-icon-color: #5b6472;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        font-family: var(--sans);
+        color: var(--ink);
+        background: var(--canvas);
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        letter-spacing: -0.005em;
+      }
+
+      /* ---- Top bar ---- */
+      .topbar {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 22px; border-bottom: 1px solid var(--line);
+        background: var(--panel); box-shadow: var(--shadow-1); z-index: 2;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 15px; }
+      .brand .mark {
+        width: 22px; height: 22px; border-radius: 7px; flex: 0 0 auto;
+        background: linear-gradient(135deg, var(--primary), #4d86ff);
+        box-shadow: 0 2px 6px rgba(19,91,236,.35);
+      }
+      .brand .sub { color: var(--muted); font-weight: 500; }
+      .spacer { flex: 1; }
+      .conn {
+        display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted);
+        background: var(--canvas); border: 1px solid var(--line);
+        padding: 4px 10px; border-radius: 999px;
+      }
+      .conn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background var(--t); }
+      .conn.ok .dot { background: var(--pass); box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+      .conn.bad .dot { background: var(--fail); box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
+
+      /* ---- Body grid: rail + main ---- */
+      .layout { display: grid; grid-template-columns: 248px 1fr; min-height: 0; }
+      @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } .rail { display: none; } }
+
+      /* ---- Config rail (quiet) ---- */
+      .rail { border-right: 1px solid var(--line); padding: 22px 20px; overflow: auto; background: var(--panel); }
+      .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; font-weight: 600; }
+      .field { margin-bottom: 24px; }
+      .flabel { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 500; margin-bottom: 9px; }
+      .readout {
+        font-family: var(--mono); font-size: 12.5px; color: var(--primary);
+        background: var(--primary-weak); border-radius: 6px; padding: 1px 8px; font-weight: 600;
+      }
+      input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+      .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+      .stepper button {
+        width: 34px; height: 32px; border: 0; background: var(--panel); cursor: pointer;
+        font-size: 17px; color: var(--muted); line-height: 1; transition: background var(--t), color var(--t);
+      }
+      .stepper button:hover { background: var(--primary-weak); color: var(--primary); }
+      .stepper .val {
+        min-width: 46px; height: 32px; display: flex; align-items: center; justify-content: center;
+        border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+        font-family: var(--mono); font-size: 14px; font-weight: 600;
+      }
+      details.advanced { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 16px; }
+      details.advanced summary {
+        cursor: pointer; font-size: 12px; color: var(--muted); list-style: none;
+        display: flex; align-items: center; gap: 6px; user-select: none; font-weight: 500;
+      }
+      details.advanced summary::-webkit-details-marker { display: none; }
+      details.advanced summary::before { content: "▸"; color: var(--primary); transition: transform var(--t); }
+      details.advanced[open] summary::before { transform: rotate(90deg); }
+      details.advanced label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 5px; }
+      details.advanced input {
+        width: 100%; padding: 7px 9px; font-family: var(--mono); font-size: 12px;
+        border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--canvas); color: var(--ink);
+        transition: border-color var(--t), box-shadow var(--t);
+      }
+      details.advanced input:focus { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+      .models { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); line-height: 1.8; }
+      .models code { font-family: var(--mono); color: var(--ink); }
+      .models .soon { opacity: .7; }
+
+      /* ---- Main ---- */
+      .main { padding: 26px 30px; overflow: auto; min-width: 0; }
+
+      /* segmented control */
+      .seg { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); box-shadow: var(--shadow-1); margin-bottom: 20px; }
+      .seg button {
+        appearance: none; border: 0; background: transparent; cursor: pointer;
+        padding: 8px 18px; font-size: 13px; font-family: var(--sans); color: var(--muted);
+        font-weight: 600; border-radius: 999px; transition: background var(--t), color var(--t);
+      }
+      .seg button:hover { color: var(--ink); }
+      .seg button[aria-selected="true"] { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(19,91,236,.30); }
+
+      .mode { display: none; }
+      .mode.active { display: block; }
+
+      /* browse row */
+      .inputrow { display: flex; gap: 10px; max-width: 760px; }
+      .field-text {
+        width: 100%; padding: 12px 14px; font-size: 14px; font-family: var(--mono);
+        border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--ink);
+        transition: border-color var(--t), box-shadow var(--t);
+      }
+      .inputrow .field-text { flex: 1; }
+      .field-text:focus { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+      select.select {
+        width: 100%; padding: 9px 11px; font-size: 13px; font-family: var(--sans);
+        cursor: pointer; background: var(--panel); appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235b6472' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+      }
+      .btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 12px 22px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+        border: 1px solid var(--primary); background: var(--primary); color: #fff;
+        border-radius: var(--r-md); white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(19,91,236,.25);
+        transition: background var(--t), transform var(--t), box-shadow var(--t);
+      }
+      .btn:hover { background: var(--primary-hover); box-shadow: 0 4px 14px rgba(19,91,236,.32); }
+      .btn:active { transform: translateY(1px); }
+      .btn.secondary { background: var(--panel); color: var(--primary); box-shadow: var(--shadow-1); }
+      .btn.ghost {
+        background: var(--panel); color: var(--ink); border-color: var(--line);
+        box-shadow: none; padding: 7px 13px; font-size: 13px;
+      }
+      .btn.ghost:hover { background: var(--canvas); border-color: #c3cad6; }
+      .btn.newsession { width: 100%; justify-content: center; margin-bottom: 20px; }
+      .btn:disabled { opacity: .5; cursor: default; box-shadow: none; }
+
+      /* creative field locked (in use for the current run) */
+      .field-text:disabled, .field-text.locked {
+        background: #f1f3f7; color: var(--muted); cursor: not-allowed;
+        border-color: var(--line); box-shadow: none;
+      }
+
+      /* estimated progress panel (A2A is non-streaming, so stages are indicative) */
+      .progress {
+        border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel);
+        padding: 26px 24px; box-shadow: var(--shadow-1); max-width: 760px;
+      }
+      .progress .p-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+      .progress .p-track {
+        margin: 16px 0 10px; height: 6px; border-radius: 999px; background: var(--primary-weak); overflow: hidden;
+      }
+      .progress .p-fill {
+        height: 100%; width: 6%; border-radius: 999px; background: var(--primary);
+        transition: width .5s ease; position: relative;
+      }
+      .progress .p-fill::after {
+        content: ""; position: absolute; inset: 0; border-radius: 999px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+        animation: sheen 1.3s linear infinite;
+      }
+      @keyframes sheen { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+      .progress .p-step { font-size: 12.5px; color: var(--muted); font-family: var(--mono); }
+      .progress .p-note { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+      @media (prefers-reduced-motion: reduce) { .progress .p-fill::after { animation: none; } }
+      .hint { color: var(--muted); font-size: 12.5px; margin-top: 9px; }
+
+      /* creative-direction field (shared by both modes) */
+      .creative { max-width: 760px; margin-top: 18px; }
+      .creative label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+      .creative label .opt { color: var(--muted); font-weight: 500; }
+      .creative textarea.field-text { font-family: var(--sans); min-height: 84px; resize: vertical; line-height: 1.5; }
+      .creative .hint { margin-top: 7px; }
+
+      /* upload dropzone */
+      .drop {
+        max-width: 760px; border: 1.5px dashed var(--line); border-radius: var(--r-lg);
+        background: var(--panel); padding: 38px 24px; text-align: center;
+        color: var(--muted); cursor: pointer; transition: border-color var(--t), background var(--t), box-shadow var(--t);
+      }
+      .drop:hover { border-color: #c3cad6; box-shadow: var(--shadow-1); }
+      .drop.drag { border-color: var(--primary); background: var(--primary-weak); color: var(--ink); }
+      .drop strong { color: var(--ink); font-weight: 600; }
+      .drop .sub { font-size: 12px; margin-top: 6px; }
+      .drop-preview { display: none; align-items: center; gap: 16px; margin-top: 16px; }
+      .drop-preview img { width: 76px; height: 76px; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
+      .drop-preview .fname { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+      /* stage */
+      .stage-wrap { margin-top: 24px; }
+      #stage { min-height: 140px; }
+      .empty {
+        border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel);
+        padding: 56px 24px; text-align: center; color: var(--muted); font-size: 14px; box-shadow: var(--shadow-1);
+      }
+      .empty .big { font-size: 15px; color: var(--ink); font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+      /* Fidelity Report surface: smaller (but readable) type + more prominent
+         images. Scoped by a per-surface class the client adds (surface-<id>). */
+      /* Ensure rendered widgets inherit the emoji-capable font stack (for ✅/❌). */
+      a2ui-surface { font-family: var(--sans); }
+      a2ui-surface.surface-fidelity-result {
+        --a2ui-font-size-2xl: 1.3rem;
+        --a2ui-font-size-xl: 1.1rem;
+        --a2ui-font-size-l: 1rem;
+        --a2ui-font-size-m: 0.9rem;
+        --a2ui-font-size-s: 0.84rem;
+        --a2ui-font-size-xs: 0.78rem;
+        --a2ui-image-large-feature-size: 460px;
+      }
+
+      /* status line */
+      #status { margin-top: 16px; font-size: 12.5px; color: var(--muted); white-space: pre-wrap; font-family: var(--mono); line-height: 1.55; }
+      .spin {
+        display: inline-block; width: 12px; height: 12px; vertical-align: -1px;
+        border: 2px solid var(--line); border-top-color: var(--primary); border-radius: 50%;
+        animation: spin .8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spin { animation: none; } * { transition: none !important; } }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <span class="brand"><span class="mark"></span>Product Fidelity <span class="sub">· A2UI</span></span>
+      <span class="spacer"></span>
+      <span id="conn" class="conn"><span class="dot"></span><span id="connText">checking…</span></span>
+    </div>
+
+    <div class="layout">
+      <!-- Config rail -->
+      <aside class="rail">
+        <button id="newSessionBtn" class="btn ghost newsession" title="Clear the workflow and start fresh">↺ New session</button>
+
+        <p class="eyebrow">Run config</p>
+
+        <div class="field">
+          <div class="flabel"><span>Passing threshold</span><span id="thrOut" class="readout">0.70</span></div>
+          <input id="thr" type="range" min="0" max="1" step="0.05" value="0.7" />
+        </div>
+
+        <div class="field">
+          <div class="flabel"><span>Max attempts</span></div>
+          <div class="stepper">
+            <button id="retMinus" type="button" aria-label="Fewer attempts">−</button>
+            <div id="retVal" class="val">3</div>
+            <button id="retPlus" type="button" aria-label="More attempts">+</button>
+          </div>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <label>Agent A2A URL</label>
+          <!-- Relative path: resolves against the page URL, so it works at the
+               root (/a2a) AND behind a path prefix like Workbench's /proxy/5173/. -->
+          <input id="agentUrl" type="text" value="a2a" />
+        </details>
+
+        <div class="field">
+          <div class="flabel"><span>Image model</span></div>
+          <select id="imageModel" class="field-text select">
+            <option value="gemini-3.1-flash-lite-image">Nano Banana 2 Lite · fastest &amp; cheapest</option>
+            <option value="gemini-3.1-flash-image" selected>Nano Banana 2 · balanced (default)</option>
+            <option value="gemini-3-pro-image">Nano Banana Pro · highest quality</option>
+          </select>
+          <div id="imageModelHint" class="hint"></div>
+        </div>
+
+        <div class="models">
+          text model · <code>gemini-3.5-flash</code>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="seg" role="tablist">
+          <button id="tabBrowse" role="tab" aria-selected="true">Browse GCS</button>
+          <button id="tabUpload" role="tab" aria-selected="false">Upload image</button>
+        </div>
+
+        <!-- Browse mode -->
+        <section id="modeBrowse" class="mode active">
+          <div class="inputrow">
+            <input id="prefix" type="text" class="field-text" placeholder="gs://my-bucket/products/"
+              value="gs://sandbox-401718-product-fidelity-evals/" />
+            <button id="browseBtn" class="btn">Browse</button>
+          </div>
+          <div class="hint">List product images in a bucket, then pick one to evaluate.</div>
+        </section>
+
+        <!-- Upload mode -->
+        <section id="modeUpload" class="mode">
+          <div id="drop" class="drop">
+            <strong>Drop an image here</strong> or click to choose
+            <div class="sub">PNG · JPG · WEBP — evaluated against a generated candidate</div>
+            <input id="file" type="file" accept="image/*" hidden />
+            <div id="dropPreview" class="drop-preview">
+              <img id="dropThumb" alt="" />
+              <div>
+                <div id="dropName" class="fname"></div>
+                <button id="uploadBtn" class="btn" style="margin-top:10px">Generate and Evaluate</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Optional creative direction (shared by both modes) -->
+        <div class="creative">
+          <label for="creativePrompt">Creative direction <span class="opt">(optional)</span></label>
+          <textarea id="creativePrompt" class="field-text" rows="3"
+            placeholder="e.g. studio lighting on a white background, front view, centered product with soft shadows"></textarea>
+          <div class="hint">Guides how the candidate image is generated. Leave blank to use the reference as-is.</div>
+        </div>
+
+        <div class="stage-wrap">
+          <div id="stage">
+            <div class="empty">
+              <div class="big">Nothing rendered yet</div>
+              Browse a bucket or upload an image to begin.
+            </div>
+          </div>
+          <div id="status"></div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
